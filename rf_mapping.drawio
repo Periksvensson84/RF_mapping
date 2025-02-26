@@ -1,0 +1,138 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0" version="24.9.3">
+  <diagram name="Page-1" id="vNVrnEABNTlf1aJvdIIX">
+    <mxGraphModel dx="1185" dy="648" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-15" value="Front-end app" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="320" width="420" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-1" value="&lt;div&gt;Browse for video file&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-15">
+          <mxGeometry x="10" y="40" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-7" value="&lt;div&gt;Save csv(h5) file &amp;amp; (show) labeled video&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-15">
+          <mxGeometry x="330" y="40" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-15" source="pD3Jry5jMXSjcFZiKpdW-10" target="pD3Jry5jMXSjcFZiKpdW-16">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="310" y="60" />
+              <mxPoint x="310" y="110" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-10" value="Predict on the video" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-15">
+          <mxGeometry x="220" y="40" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-9" value="Prompt: crop the video?" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-15">
+          <mxGeometry x="120" y="40" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-15" source="pD3Jry5jMXSjcFZiKpdW-10" target="pD3Jry5jMXSjcFZiKpdW-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-15" source="pD3Jry5jMXSjcFZiKpdW-1" target="pD3Jry5jMXSjcFZiKpdW-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-15" source="pD3Jry5jMXSjcFZiKpdW-9" target="pD3Jry5jMXSjcFZiKpdW-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-16" value="&lt;div&gt;Print likelihoods (save?)&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-15">
+          <mxGeometry x="330" y="90" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-18" value="Post-processing" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="485" width="760" height="385" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-19" target="pD3Jry5jMXSjcFZiKpdW-27">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="50" y="118" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-19" value="&lt;div&gt;Browse for nerve/accel csv&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="10" y="45" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-45" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-27" target="pD3Jry5jMXSjcFZiKpdW-44">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-27" value="&lt;div align=&quot;left&quot;&gt;&amp;nbsp; Inputs:&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;&lt;ul&gt;&lt;li&gt;fps (video)&lt;/li&gt;&lt;li&gt;frequency (data)&lt;/li&gt;&lt;li&gt;column name (nerve)&lt;/li&gt;&lt;li&gt;column name (accelerometer)&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="120" y="45" width="150" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-30" target="pD3Jry5jMXSjcFZiKpdW-31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-30" value="&lt;div&gt;Browse for labeled points csv(h5) file&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="10" y="205" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-31" target="pD3Jry5jMXSjcFZiKpdW-35">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-43" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-31" target="pD3Jry5jMXSjcFZiKpdW-40">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-31" value="Columns already known from previous step" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="120" y="202.5" width="150" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-35" target="pD3Jry5jMXSjcFZiKpdW-36">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-35" target="pD3Jry5jMXSjcFZiKpdW-48">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-35" value="Calculate bending coefficient" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="310" y="200" width="80" height="48.75" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-36" value="&lt;div&gt;Plot bending coefficient w peaks&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="310" y="135" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-40" target="pD3Jry5jMXSjcFZiKpdW-41">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-40" target="pD3Jry5jMXSjcFZiKpdW-48">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-40" value="Perform homography" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="310" y="265" width="80" height="48.75" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-41" value="&lt;div&gt;Save (show) homography video&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="310" y="335" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-44" target="pD3Jry5jMXSjcFZiKpdW-46">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-44" target="pD3Jry5jMXSjcFZiKpdW-48">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-44" value="Downsample" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="420" y="45" width="80" height="48.75" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-46" value="&lt;div&gt;Plot nerve &amp;amp; accelerometer (w contact peaks)&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="420" y="135" width="80" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-56" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-48" target="pD3Jry5jMXSjcFZiKpdW-54">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="225" />
+              <mxPoint x="640" y="308" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-48" value="Synchronize" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="550" y="200.63" width="80" height="48.75" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-52" value="Plot rf mapping (image or video)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="660" y="197.81" width="80" height="54.38" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-53" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=-0.041;entryY=0.527;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="pD3Jry5jMXSjcFZiKpdW-18" source="pD3Jry5jMXSjcFZiKpdW-48" target="pD3Jry5jMXSjcFZiKpdW-52">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-54" value="Save csv with all data (original, transformed, nerve, accel)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="pD3Jry5jMXSjcFZiKpdW-18">
+          <mxGeometry x="660" y="265" width="80" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="pD3Jry5jMXSjcFZiKpdW-23" value="&lt;div align=&quot;left&quot;&gt;Automatically downsize to 30 fps for the video? Or keep it at the input fps? prompt the user to set a fps value? (lower fps = faster labeling)&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="480" y="360" width="230" height="70" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
