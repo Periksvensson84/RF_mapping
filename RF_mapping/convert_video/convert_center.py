@@ -61,7 +61,7 @@ def convert_video(input_path, crop_x=1274, crop_y=720, target_fps=30):
     # Calculate frame skipping ratio
     frame_skip_ratio = original_fps / target_fps
 
-    # Set the codec and create VideoWriter object
+    # Set the codec and create VideoWriter object5rf4e n
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # codec for .mp4
     out = cv2.VideoWriter(output_path, fourcc, target_fps, (crop_x, crop_y))
 

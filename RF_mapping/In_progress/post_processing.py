@@ -7,7 +7,17 @@ import seaborn as sns
 from scipy.signal import find_peaks
 import cv2
 
+#! This below class should be split up into multiple classes, each with a single responsibility
+#! This class is doing too much, and is not following the single responsibility principle
+#! This class is also not following the open/closed principle, as it is not easily extensible
+#! This class is also not following the Liskov substitution principle, as it is not easily substitutable
+#! This class is also not following the interface segregation principle, as it is not easily splittable
+#! This class is also not following the dependency inversion principle, as it is not easily injectable
+#! This class is also not following the don't repeat yourself principle, as there is a lot of repeated code
+#! This class is also not following the composition over inheritance principle, as it is not easily composed
 class DLCPostProcessing:
+    # This is the initial class, reading the h5 file for DLC data, then
+    # getting bending coefficient, homography, plotting, and saving the homography video
     def __init__(self, h5_path, excel_path = None):
         #! validate h5_path, excel_path, and their types
         self._read_hdf(h5_path)
@@ -152,7 +162,7 @@ class DLCPostProcessing:
         out.release()
 
 
-
+    # This could be some sort of nerve reading class, downsampling + simple plotting
     def _xlsx_processing(self, xlsx_file, original_freq = 1000, target_freq = 30):
         # Read the Excel file
         df_nerve = pd.read_excel(xlsx_file)
@@ -211,6 +221,8 @@ class DLCPostProcessing:
         plt.title('Accelerometer Data and Neuron Activity Over Time')
         plt.show()
 
+
+    # This could be part of a merge class?
     def _synchronize(self):
         #! Implement this method such that it syncs bending coefficient with
         #! neuron and accelerometer data. This should involve using the 5
