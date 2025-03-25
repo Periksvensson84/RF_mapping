@@ -32,11 +32,12 @@ class OutlierImputer:
         }
 
     def __init__(self,
-                 model="RFR",
-                 std_threshold=1.0,
-                 min_samples=10,
-                 residual_threshold=0.01,
-                 max_trials=300):
+                 model: str = "RFR",
+                 std_threshold: int|float = 1.0,
+                 min_samples: int = 10,
+                 residual_threshold: float = 0.01,
+                 max_trials: int = 300):
+
         self.model = model
         self.std_threshold = std_threshold
         self.min_samples = min_samples
@@ -44,7 +45,9 @@ class OutlierImputer:
         self.max_trials = max_trials
 
     @staticmethod
-    def compute_angles(df, pairs):
+    def compute_angles(df: pd.DataFrame,
+                       pairs: list):
+
         angles = []
         for pair in pairs:
             x1, y1, x2, y2 = df.iloc[:, pair[0]], \
@@ -55,7 +58,10 @@ class OutlierImputer:
             angles.append(np.arctan2(y2 - y1, x2 - x1))
         return np.column_stack(angles)
 
-    def detect_outliers_square_std(self, df, pairs):
+    def detect_outliers_square_std(self,
+                                   df: pd.DataFrame,
+                                   pairs: list):
+
         # Compute the angles between the square points
         angles = self.compute_angles(df, pairs)
         angle_df = pd.DataFrame(angles, columns=[
@@ -66,23 +72,30 @@ class OutlierImputer:
 
         # Detect outliers based on the standard deviation threshold
         for i, pair in enumerate(pairs):
-            outlier_mask = (angle_df.iloc[:, i] - angle_means.iloc[i]).abs() > \
+            outlier_mask = \
+                (angle_df.iloc[:, i] - angle_means.iloc[i]).abs() > \
                 self.std_threshold * angle_stds.iloc[i]
-            df.loc[outlier_mask, [df.columns[pair[2]], df.columns[pair[3]]]] = \
-                np.nan
+            df.loc[outlier_mask, [df.columns[pair[2]],
+                                  df.columns[pair[3]]]] = np.nan
 
         return df
 
-    def detect_outliers_ransac(self, df, pairs):
+    def detect_outliers_ransac(self,
+                               df: pd.DataFrame,
+                               pairs: list):
         # Compute the angles between the square points
         angles = self.compute_angles(df, pairs)
-        angle_df = pd.DataFrame(angles, columns=[f"angle_{i+1}" for i in range(angles.shape[1])], index=df.index)
+        angle_df = pd.DataFrame(angles,
+                                columns=[f"angle_{i+1}" for i in range(angles.shape[1])],
+                                index=df.index)
         # Initialize the inlier mask
         inlier_mask = np.ones(len(df), dtype=bool)
 
         # Fit RANSAC regressor to each angle column
         for col in angle_df.columns:
-            ransac = RANSACRegressor(min_samples=self.min_samples, residual_threshold=self.residual_threshold, max_trials=self.max_trials)
+            ransac = RANSACRegressor(min_samples=self.min_samples,
+                                     residual_threshold=self.residual_threshold,
+                                     max_trials=self.max_trials)
             ransac.fit(np.arange(len(df)).reshape(-1, 1), angle_df[col])
             # Update the inlier mask
             inlier_mask &= ransac.inlier_mask_
@@ -91,7 +104,9 @@ class OutlierImputer:
         df.loc[~inlier_mask, df.columns[:8]] = np.nan
         return df
 
-    def impute_with_ml(self, df, target_col):
+    def impute_with_ml(self,
+                       df: pd.DataFrame,
+                       target_col: str):
         # Split the DataFrame into training and testing sets based on
         # the target column
         df_copy, train_df, test_df = df.copy(), \
@@ -113,10 +128,13 @@ class OutlierImputer:
         ml_model.fit(X_train, y_train)
     
         # Impute the missing values
-        df_copy.loc[df_copy[target_col].isna(), target_col] = ml_model.predict(test_df[feature_cols])
+        df_copy.loc[df_copy[target_col].isna(), target_col] = \
+            ml_model.predict(test_df[feature_cols])
         return df_copy
 
-    def impute_outliers(self, df, method="square_ransac"):
+    def impute_outliers(self,
+                        df: pd.DataFrame,
+                        method:str ="square_ransac"):
         # Make a copy of the DataFrame and drop rows with all NaN values
         # to avoid errors in the outlier detection
         df_copy, valid_rows = df.copy(), df.dropna(how="all")

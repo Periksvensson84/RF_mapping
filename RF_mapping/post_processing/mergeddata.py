@@ -62,7 +62,6 @@ class MergedData:
                 | (self.df_merged['Spikes'] != 0)]
         return self.df_merged_cleaned
 
-
     def _save_data(self,
                    df: pd.DataFrame,
                    path: str,
@@ -76,8 +75,12 @@ class MergedData:
         except Exception as e:
             raise Exception(f'Error saving data to {path}: {e}')
 
-    def save_full_data(self, path: str, file_format: str = 'csv'):
+    def save_full_data(self,
+                       path: str,
+                       file_format: str = 'csv'):
         self._save_data(self.df_merged, path, file_format)
 
-    def save_cleaned_data(self, path: str, file_format: str = 'csv'):
+    def save_cleaned_data(self,
+                          path: str,
+                          file_format: str = 'csv'):
         self._save_data(self.df_merged_cleaned, path, file_format)

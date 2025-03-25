@@ -7,6 +7,7 @@ class DataNeuron:
     def __init__(self,
                  xclc_path: str,
                  original_freq: int):
+
         # Validate path and types
         if not isinstance(xclc_path, str):
             raise ValueError("xclc_path must be a string")
@@ -37,6 +38,7 @@ class DataNeuron:
             self.calculate_iff()
 
     def calculate_iff(self):
+
         # Create Instantaneous Frequency Firing (IFF):
         # 1 divided by the difference between the current time and last spike time
         spikes_loc = self.df[self.df['Spikes'] == 1].index
@@ -54,12 +56,14 @@ class DataNeuron:
         self.df["IFF"].fillna(0, inplace=True)
 
     def _get_frequency(self):
+
         time_diffs = np.diff(self.df['Time'])
         # Calculate the frequency as the reciprocal of the mean time difference
         current_freq = 1 / np.mean(time_diffs).round()
         return current_freq
 
     def fill_samples(self):
+
         interval = 1 / self.original_freq  # Compute time step based on frequency
         min_time, max_time = 0, self.df['Time'].max()
 
@@ -83,7 +87,8 @@ class DataNeuron:
         self.df = filled_df
 
     def downsample(self,
-                   target_freq:int):
+                   target_freq: int):
+
         # Calculate the downsampling factor
         downsample_factor = int(self.original_freq / target_freq)
         print(downsample_factor)
@@ -117,7 +122,8 @@ class DataNeuron:
         return self.downsampled_df
 
     def _fill_downsample_length(self,
-                    target_length: int):
+                                target_length: int):
+
         # Fill the data up to a target length by forward filling the data
         self.downsampled_df = self.downsampled_df.reindex(range(target_length))
         self.downsampled_df['Spikes'].fillna(0, inplace=True)

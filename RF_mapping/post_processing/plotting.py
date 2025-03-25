@@ -11,10 +11,15 @@ from mergeddata import MergedData
 
 class Plotting:
     @staticmethod
+    def _get_lim():
+        return -100, 300
+    
+    @staticmethod
     def plot_line(series: pd.Series,
                   xlabel: str, ylabel: str,
                   title: str,
                   figsize: tuple=(12,6)):
+
         fig, ax = plt.subplots(figsize=figsize)
         ax.plot(series, marker='o', linestyle='-', color='b')
         ax.set_xlabel(xlabel)
@@ -29,7 +34,8 @@ class Plotting:
                    ylabel_1: str,
                    ylabel_2: str,
                    title: str,
-                   figsize=(12,6)):
+                   figsize: tuple[int] = (12,6)):
+
         # plot two axes on the same plot
         fig, ax1 = plt.subplots(figsize=figsize)
         ax2 = ax1.twinx()
@@ -55,12 +61,15 @@ class Plotting:
                                  df_transformed_monofil: pd.DataFrame,
                                  filepath: str,
                                  fps: int=30,
-                                 figsize = (12,12)):
+                                 figsize: tuple[int] = (12,12)):
+
         #! validation of homography_points and df_transformed_monofil
         #! validation of filepath, specifically ending in .mp4
         fig, ax = plt.subplots(figsize=figsize)
-        ax.set_xlim(0, 300)
-        ax.set_ylim(0, 300)
+        ax.set_xlim(Plotting._get_lim())
+        ax.set_ylim(Plotting._get_lim())
+        ax.set_xlabel('homography x (mm)')
+        ax.set_ylabel('homography y (mm)')
 
         # Plot destination points
         for point in homography_points:
@@ -88,6 +97,46 @@ class Plotting:
             print(f"Error saving animation: {e}")
 
 
+    # Used by the below methods
+    @staticmethod
+    def scatter_ax(ax: plt.Axes,
+                   dfs: tuple,
+                   x_col: str,
+                   y_col: str,
+                   size_col: str):
+
+        sns.scatterplot(x=x_col, y=y_col, 
+                        size=size_col, sizes=(25, 50), # Enlarge the sizes
+                        alpha=0.3, edgecolor=None,
+                        data=dfs[0], color='blue', ax=ax)
+        sns.scatterplot(x=x_col, y=y_col,
+                        size=size_col, sizes=(25, 50), # Enlarge the sizes
+                        alpha=0.3, edgecolor=None,
+                        data=dfs[1], color='red', ax=ax)
+        sns.scatterplot(x=x_col, y=y_col,
+                        size=size_col, sizes=(25, 50), # Enlarge the sizes
+                        alpha=0.3, edgecolor=None,
+                        data=dfs[2], color='green', ax=ax)
+        
+        # color legend, blue = high bend w neuron, red = high bed w/o neuron, green = low bend w neuron
+        legend_elements = [Line2D([0], [0], marker='o', color='w',
+                                    markerfacecolor='blue',
+                                    markersize=10,
+                                    label='High Bend & Neuron Spike'),
+                            Line2D([0], [0], marker='o', color='w',
+                                    markerfacecolor='red',
+                                    markersize=10,
+                                    label='High Bend & no Neuron Spike'),
+                            Line2D([0], [0], marker='o', color='w',
+                                    markerfacecolor='green',
+                                    markersize=10,
+                                    label='Low Bend & Neuron Spike')]
+        
+        legend = ax.legend(handles=legend_elements,
+                        title='Bending Coefficient and Neuron Cases\n(Circle Size ∝ Bending Coefficient)',
+                        loc='upper left')
+        return legend
+
     # For synchronized data
     @staticmethod
     def plot_rf_mapping(merged_data: MergedData,
@@ -99,11 +148,12 @@ class Plotting:
                         title: str = 'RF Mapping of Neuron Activity',
                         xlabel: str = "homography x",
                         ylabel: str = "homography y",
-                        figsize=(12, 12)):
+                        figsize: tuple[int] = (12, 12)):
+
         fig, ax = plt.subplots(figsize=figsize)
         df = merged_data.threshold_data(threshold)
-        ax.set_xlim(0, 300)
-        ax.set_ylim(0, 300)
+        ax.set_xlim(Plotting._get_lim())
+        ax.set_ylim(Plotting._get_lim())
         ax.set_title(title)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -120,23 +170,11 @@ class Plotting:
         # Define colors for spikes (0 and 1)
         colors = df[spikes_col].apply(lambda x: 'red' if x > 0 else 'blue')
 
-        scatter = ax.scatter(df[x_col], df[y_col],
-                            c=colors, s=sizes,
-                            alpha=0.5,
-                            edgecolors=None,
-                            linewidth=0.5)
-
-
-        # Create a legend for sizes
-        handles, labels = scatter.legend_elements(prop="sizes",
-                                                  alpha=0.6)
-        legend2 = ax.legend(handles,
-                            labels,
-                            loc="upper right",
-                            title="Bending Coefficient Sizes")
-
-        # Add the legend to the plot
-        ax.add_artist(legend2)
+        ax.scatter(df[x_col], df[y_col],
+                   c=colors, s=sizes,
+                   alpha=0.5,
+                   edgecolors=None,
+                   linewidth=0.5)
 
         # Add custom legend for colors
         from matplotlib.lines import Line2D
@@ -152,24 +190,26 @@ class Plotting:
                                label='Spike')]
         ax.legend(handles=custom_lines,
                   loc="upper left",
-                  title="Spike Status")
+                  title="Neuron Spike Status\n(Circle Size ∝ Bending Coefficient)")
 
         plt.show()
 
     @staticmethod
     def plot_rf_mapping_animated(merged_data: MergedData,
                                  x_col: str, y_col: str,
-                                 bending_col: str, spikes_col: str,
+                                 bending_col: str,
+                                 spikes_col: str,
                                  homography_points: np.ndarray,
                                  filepath: str,
                                  xlabel: str = "homography x",
                                  ylabel: str = "homography y",
-                                 fps: int = 30, figsize=(12, 12)):
-        #! this method should work, but it does take forever to run
+                                 fps: int = 30,
+                                 figsize: tuple[int] = (12, 12)):
+
         fig, ax = plt.subplots(figsize=figsize)
-        df = merged_data.df_merged
-        ax.set_xlim(0, 300)
-        ax.set_ylim(0, 300)
+        df = merged_data.threshold_data(0.14)
+        ax.set_xlim(Plotting._get_lim())
+        ax.set_ylim(Plotting._get_lim())
         ax.set_title('RF Mapping Animation')
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -222,129 +262,72 @@ class Plotting:
         except Exception as e:
             print(f"Error saving animation: {e}")
 
-
-    @staticmethod
-    def scatter_ax(ax,
-                    dfs: tuple,
-                    x_col,
-                    y_col,
-                    size_col, sizes):
-        sns.scatterplot(x=x_col, y=y_col, 
-                        size=size_col, sizes=sizes,
-                        alpha=0.3, edgecolor=None,
-                        data=dfs[0], color='blue', ax=ax)
-        sns.scatterplot(x=x_col, y=y_col,
-                        size=size_col, sizes=sizes,
-                        alpha=0.3, edgecolor=None,
-                        data=dfs[1], color='red', ax=ax)
-        sns.scatterplot(x=x_col, y=y_col,
-                        size=size_col, sizes=sizes,
-                        alpha=0.3, edgecolor=None,
-                        data=dfs[2], color='green', ax=ax)
-        
-        # color legend, blue = high bend w neuron, red = high bed w/o neuron, green = low bend w neuron
-        legend_elements = [Line2D([0], [0], marker='o', color='w',
-                                    markerfacecolor='blue',
-                                    markersize=10,
-                                    label='High Bend & Neuron'),
-                            Line2D([0], [0], marker='o', color='w',
-                                    markerfacecolor='red',
-                                    markersize=10,
-                                    label='High Bend & no Neuron'),
-                            Line2D([0], [0], marker='o', color='w',
-                                    markerfacecolor='green',
-                                    markersize=10,
-                                    label='Low Bend & Neuron')]
-        
-        ax.legend(handles=legend_elements,
-                title='Bending Coefficient and Neuron Cases',
-                loc='upper left')
-
     @staticmethod
     def plot_kde_scatter(merged_data: MergedData,
-                         x_col: str, y_col: str,
-                         homography_points: np.ndarray,
-                         kde: bool = True,
-                         scatter: bool = True,
-                         size = "IFF",
-                         title: str = 'KDE and Scatter Plot',
-                         xlabel: str = 'X', ylabel: str = 'Y', figsize=(12, 12)):
+                        x_col: str, y_col: str,
+                        homography_points: np.ndarray,
+                        kde: bool = True,
+                        scatter: bool = True,
+                        size: str = "IFF",
+                        title: str = 'KDE and Scatter Plot',
+                        xlabel: str = 'X', ylabel: str = 'Y',
+                        figsize: tuple[int] = (12, 12),
+                        # Required inputs for frame overlay:
+                        frame: bool = False,
+                        video_path: str = None,
+                        index: int = None):
+
         fig, ax = plt.subplots(figsize=figsize)
-        ax.set_xlim(0, 300)
-        ax.set_ylim(0, 300)
+
+        if frame:
+            # get h_matrix for the frame
+            dst_min, dst_max = 300, 500
+            dst_points = np.array([[dst_min, dst_max],
+                                [dst_max, dst_max],
+                                [dst_max, dst_min],
+                                [dst_min, dst_min]])
+            h_matrix = merged_data.dlc._get_homography_matrix(index, dst_points)
+            
+            if video_path is None or index is None:
+                raise ValueError("video_path, and index must be provided when frame is True")
+
+            # Load the video frame
+            cap = cv2.VideoCapture(video_path)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, index)
+            ret, frame = cap.read()
+            cap.release()
+
+            if not ret:
+                print("Error: Could not read video frame.")
+                return
+
+            # Convert BGR (OpenCV) to RGB (Matplotlib)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            # Get original frame dimensions
+            h, w, _ = frame.shape
+
+            # Warp the frame using the homography matrix
+            frame_transformed = cv2.warpPerspective(frame, h_matrix, (w, h))
+
+            # Plot the transformed frame
+            change = -300
+            # Offset to center the frame in the plot due to different h_matrix dst_points
+            ax.imshow(frame_transformed, extent=[change, w+change, h+change, change])
+
+        # Set proper plot limits
+        ax.set_xlim(Plotting._get_lim())
+        ax.set_ylim(Plotting._get_lim())
         ax.set_title(title)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
 
         for point in homography_points:
-                ax.axhline(y=point[1], color='gray', linestyle='--', alpha=0.5)
-                ax.axvline(x=point[0], color='gray', linestyle='--', alpha=0.5)
+            ax.axhline(y=point[1], color='gray', linestyle='--', alpha=0.5)
+            ax.axvline(x=point[0], color='gray', linestyle='--', alpha=0.5)
 
         if kde:
-            sns.kdeplot(x=df[x_col], y=df[y_col],
-                        fill=True,
-                        cmap='vlag',
-                        bw_adjust=0.3,
-                        ax=ax)
-        if scatter:
-            ax.scatter(x_col, y_col,
-                       s=df[size], # size based on IFF
-                       sizes=np.arange(5, 35, 5), # size range
-                       c='gray',
-                       alpha=0.35,
-                       data=df,
-                       edgecolors=None)
-            
-        # Create a legend for the scatter plot sizes
-        size_legend = np.arange(5, 35, 5)  # Example sizes
-        legend_elements = [Line2D([0], [0], marker='o', color='w',
-                                markerfacecolor='gray',
-                                markersize=np.sqrt(s), label=f'{s}')
-                        for s in size_legend]
-        ax.legend(handles=legend_elements, title=size, loc='upper right')
-
-        plt.show()
-        return fig, ax
-
-    @staticmethod
-    def plot_kde_scatter_over_frame(merged_data: MergedData,
-                                    h_matrix: np.ndarray,
-                                    video_path: str,
-                                    index: int,
-                                    x_col: str, y_col: str,
-                                    homography_points: np.ndarray,
-                                    kde: bool = True,
-                                    scatter: bool = True,
-                                    size: str = "IFF",
-                                    title: str = 'KDE and Scatter Plot',
-                                    xlabel: str = 'X', ylabel: str = 'Y',
-                                    figsize=(12, 12)):
-        
-        # Load the video frame
-        cap = cv2.VideoCapture(video_path)
-        cap.set(cv2.CAP_PROP_POS_FRAMES, index)
-        ret, frame = cap.read()
-        cap.release()
-
-        if not ret:
-            print("Error: Could not read video frame.")
-            return
-
-        # Convert BGR (OpenCV) to RGB (Matplotlib)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # Warp the frame using the homography matrix
-        h, w, _ = frame.shape
-        frame_transformed = cv2.warpPerspective(frame, h_matrix, (w, h))
-
-        # Create figure and axis
-        fig, ax = plt.subplots(figsize=figsize)
-        
-        # Show the transformed frame in the background
-        ax.imshow(frame_transformed)
-
-        # Overlay KDE + scatter plot
-        if kde:
+            df = merged_data.threshold_data(0.14)
             sns.kdeplot(x=df[x_col], y=df[y_col],
                         fill=True,
                         cmap='vlag',
@@ -352,31 +335,11 @@ class Plotting:
                         ax=ax,
                         alpha=0.5)
         if scatter:
-            sizes = np.arange(5, 35, 5)
-            ax.scatter(df[x_col], df[y_col],
-                        s=df[size],  # Size based on IFF
-                        sizes=sizes, # Size range
-                        color='gray',
-                        alpha=0.5,
-                        label="Scatter Data",
-                        edgecolors=None)
-            
-            # Create a legend for the scatter plot sizes
-            legend_elements = [Line2D([0], [0], marker='o', color='w',
-                                      markerfacecolor='gray',
-                                      markersize=np.sqrt(s),
-                                      label=f'{s}')
-                               for s in sizes]
-            ax.legend(handles=legend_elements, title=size, loc='upper right')
-
-        ax.set_xlim(0, 300)
-        ax.set_ylim(0, 300)
-        ax.set_title(title)
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-        for point in homography_points:
-                    ax.axhline(y=point[1], color='gray', linestyle='--', alpha=0.5)
-                    ax.axvline(x=point[0], color='gray', linestyle='--', alpha=0.5)
+            legend = Plotting.scatter_ax(ax,
+                                            merged_data.plotting_split(0.14),
+                                            x_col, y_col,
+                                            size)
+            ax.add_artist(legend)
 
         plt.show()
         return fig, ax
