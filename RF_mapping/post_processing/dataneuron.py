@@ -2,39 +2,46 @@ import pandas as pd
 import numpy as np
 import cv2
 import re
+from validation import Validation as Val
 
 class DataNeuron:
     def __init__(self,
                  xclc_path: str,
                  original_freq: int):
 
-        # Validate path and types
-        if not isinstance(xclc_path, str):
-            raise ValueError("xclc_path must be a string")
-        if not isinstance(original_freq, int):
-            raise ValueError("original_freq must be a number")
+        Val.validate_path(xclc_path, file_type=".xlsx")
+        Val.validate_type(original_freq, int, "Original Frequency")
+        Val.validate_positive(original_freq, "Original Frequency")
 
         self.df = pd.read_excel(xclc_path)
         self.original_freq = original_freq
 
-        # Check for 2 required columns: Time and Spikes
-        for column in self.df.columns:
-            if re.search(r"Time", column, re.IGNORECASE):
-                self.df.rename(columns={column: "Time"}, inplace=True)
-            elif re.search(r"Spikes", column, re.IGNORECASE):
-                self.df.rename(columns={column: "Spikes"}, inplace=True)
-            elif re.search(r"IFF|Freq", column, re.IGNORECASE):
-                self.df.rename(columns={column: "IFF"}, inplace=True)
-            else:
-                pass
-        if not all(col in self.df.columns for col in ['Time', 'Spikes']):
-            raise ValueError("Required Time and Spikes columns not found in the xclc file")
+        # Define required columns with "OR" groups
+        required_columns = [
+            ["Time"],  # Time column must exist
+            ["Spikes", "Neuron"]  # At least one of these must exist
+        ]
+        # Validate and get column mappings for required columns
+        column_mapping = Val.validate_dataframe(
+            self.df, required_columns, name="Neuron DataFrame")
+        # Rename required columns based on the mapping
+        self.df.rename(columns={v: k for k, v in column_mapping.items()},
+                       inplace=True)
 
-        # if data is not at a consistent frequency, fill the missing samples
+        # Handle optional columns (e.g., IFF or Freq)
+        optional_columns = [["IFF", "Freq"]]
+        optional_mapping = Val.validate_dataframe(
+            self.df, optional_columns, name="Neuron DataFrame", optional=True)
+        # Rename optional columns if they exist
+        if optional_mapping:
+            self.df.rename(columns={v: k for k, v in optional_mapping.items()},
+                           inplace=True)
+
+        # If data is not at a consistent frequency, fill the missing samples
         if self._get_frequency() != original_freq:
             self.fill_samples()
-        # Check for optional column: IFF/Freq, if not found, calculate it
-        if not 'IFF' in self.df.columns:
+        # If IFF column is missing, calculate it
+        if 'IFF' not in self.df.columns:
             self.calculate_iff()
 
     def calculate_iff(self):
@@ -56,7 +63,6 @@ class DataNeuron:
         self.df["IFF"].fillna(0, inplace=True)
 
     def _get_frequency(self):
-
         time_diffs = np.diff(self.df['Time'])
         # Calculate the frequency as the reciprocal of the mean time difference
         current_freq = 1 / np.mean(time_diffs).round()
@@ -88,6 +94,9 @@ class DataNeuron:
 
     def downsample(self,
                    target_freq: int):
+
+        Val.validate_type(target_freq, int, "Target Frequency")
+        Val.validate_positive(target_freq, "Target Frequency")
 
         # Calculate the downsampling factor
         downsample_factor = int(self.original_freq / target_freq)
@@ -123,6 +132,9 @@ class DataNeuron:
 
     def _fill_downsample_length(self,
                                 target_length: int):
+
+        Val.validate_type(target_length, int, "Target Length")
+        Val.validate_positive(target_length, "Target Length")
 
         # Fill the data up to a target length by forward filling the data
         self.downsampled_df = self.downsampled_df.reindex(range(target_length))

@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.linear_model import RANSACRegressor
 from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
 from sklearn.neighbors import KNeighborsRegressor
+from validation import Validation as Val
 import warnings
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -30,6 +31,7 @@ class OutlierImputer:
             "HGBR": HistGradientBoostingRegressor(),
             "KNR": KNeighborsRegressor(n_neighbors=10)
         }
+    methods = ["square_std", "square_ransac", "filament"]
 
     def __init__(self,
                  model: str = "RFR",

@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import cv2
 from outlierimputer import OutlierImputer
+from outlierimputer_derive import OutlierImputerDeriveSTD
+from validation import Validation as Val
 
 class DataDLC:
     homography_points = np.array([[0, 200],
@@ -14,23 +16,33 @@ class DataDLC:
     def __init__(self,
                  h5_path: str):
 
-        #! validate h5_path, excel_path, and their types
+        Val.validate_path(h5_path, file_type=".h5")
+
         df = pd.read_hdf(h5_path)
-        # Flatten the MultiIndex
-        df.columns = \
-            [f"{bodypart}_{coord}" for bodypart, coord in zip(
-                df.columns.get_level_values(1),
-                df.columns.get_level_values(2)
-                )]
-        self.df_monofil = \
-            df.loc[:, df.columns.str.startswith(('FR', 'FG', 'FB')) & \
-                ~df.columns.str.endswith('likelihood')]
-        self.df_square = \
-            df.loc[:, df.columns.str.startswith(
-                ('Top_left', 'Top_right', 'Bottom_left', 'Bottom_right')
-                ) & ~df.columns.str.endswith('likelihood')]
-        self.df_likelihoods = \
-            df.loc[:, df.columns.str.endswith('likelihood')]
+        self.df_merged = None
+
+        try: # extract desired parts from h5 file
+            df.columns = \
+                [f"{bodypart}_{coord}" for bodypart, coord in zip(
+                    df.columns.get_level_values(1),
+                    df.columns.get_level_values(2)
+                    )]
+
+            self.df_monofil = \
+                df.loc[:, df.columns.str.startswith(('FR', 'FG', 'FB')) & \
+                    ~df.columns.str.endswith('likelihood')]
+
+            self.df_square = \
+                df.loc[:, df.columns.str.startswith(
+                    ('Top_left', 'Top_right', 'Bottom_left', 'Bottom_right')
+                    ) & ~df.columns.str.endswith('likelihood')]
+
+            self.df_likelihoods = \
+                df.loc[:, df.columns.str.endswith('likelihood')]
+        except AttributeError as e:
+            raise AttributeError(
+                f"Invalid h5 file. Please check the file format.\n{e}"
+                )
 
     def get_likelihoods(self):
 
@@ -47,7 +59,6 @@ class DataDLC:
                         max_trials: int = 300,
                         method: str = "square_ransac",
                         filament: bool = False):
-
         #! validate model, std_threshold, min_samples, residual_threshold, max_trials
         # Initialize the OutlierImputer object
         outlier_imputer = OutlierImputer(model=model,
@@ -62,6 +73,25 @@ class DataDLC:
         if filament:
             self.df_monofil = outlier_imputer.impute_outliers(self.df_monofil,
                                                               method=method)
+
+    def impute_outliers_derive_std(self,
+                        model: str = None,
+                        hybrid_model_selection: bool = True,
+                        std_threshold: int|float = 2,
+                        square: bool = True,
+                        filament: bool = False,):
+        outlier_imputer = OutlierImputerDeriveSTD(
+            model=model,
+            hybrid_model_selection=hybrid_model_selection
+        )
+
+        # Impute outliers for the square and monofilament points
+        if square:
+            self.df_square = outlier_imputer.impute_outliers(self.df_square,
+                                                             std_threshold)
+        if filament:
+            self.df_monofil = outlier_imputer.impute_outliers(self.df_monofil,
+                                                              std_threshold)
 
     def get_bending_coefficients(self):
 
@@ -129,6 +159,9 @@ class DataDLC:
                                index: int,
                                dst_points: np.ndarray=homography_points):
 
+        Val.validate_type(index, int, "Index")
+        Val.validate_array_int(dst_points, shape=(4, 2), name="Destination Points")
+
         src_points = np.array([
             [self.df_square.iloc[index]['Top_left_x'],
              self.df_square.iloc[index]['Top_left_y']],
@@ -145,6 +178,7 @@ class DataDLC:
         return h_matrix
 
     def _merge_data(self):
+
         self.df_merged = pd.concat([self.df_square,
                                     self.df_monofil,
                                     self.df_transformed_monofil,

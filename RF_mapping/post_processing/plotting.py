@@ -133,7 +133,7 @@ class Plotting:
                                     label='Low Bend & Neuron Spike')]
         
         legend = ax.legend(handles=legend_elements,
-                        title='Bending Coefficient and Neuron Cases\n(Circle Size ∝ Bending Coefficient)',
+                        title=f'Bending Coefficient and Neuron Cases\n(Circle Size ∝ {size_col})',
                         loc='upper left')
         return legend
 
@@ -287,7 +287,7 @@ class Plotting:
                                 [dst_max, dst_min],
                                 [dst_min, dst_min]])
             h_matrix = merged_data.dlc._get_homography_matrix(index, dst_points)
-            
+
             if video_path is None or index is None:
                 raise ValueError("video_path, and index must be provided when frame is True")
 
