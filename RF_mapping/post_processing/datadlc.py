@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import cv2
 from outlierimputer import OutlierImputer
-from outlierimputer_derive import OutlierImputerDeriveSTD
 from validation import Validation as Val
 
 class DataDLC:
@@ -14,9 +13,9 @@ class DataDLC:
     # This is the initial class, reading the h5 file for DLC data, then
     # getting bending coefficient, homography, plotting, and saving the homography video
     def __init__(self,
-                 h5_path: str):
-
-        Val.validate_path(h5_path, file_type=".h5")
+                 h5_path: str) -> None:
+        Val.validate_type(h5_path, str, "H5 Path")
+        Val.validate_path(h5_path, file_types=[".h5"])
 
         df = pd.read_hdf(h5_path)
         self.df_merged = None
@@ -44,7 +43,7 @@ class DataDLC:
                 f"Invalid h5 file. Please check the file format.\n{e}"
                 )
 
-    def get_likelihoods(self):
+    def get_likelihoods(self) -> str:
 
         overall_average = self.df_likelihoods.mean().mean()
         bodypart_average = self.df_likelihoods.mean()
@@ -52,38 +51,15 @@ class DataDLC:
                f"Bodypart average likelihoods: \n{bodypart_average}"
 
     def impute_outliers(self,
-                        model: str = "HGBR",
-                        std_threshold: int|float = 1.0,
-                        min_samples: int = 10,
-                        residual_threshold: int|float = 0.01,
-                        max_trials: int = 300,
-                        method: str = "square_ransac",
-                        filament: bool = False):
-        #! validate model, std_threshold, min_samples, residual_threshold, max_trials
-        # Initialize the OutlierImputer object
-        outlier_imputer = OutlierImputer(model=model,
-                                         std_threshold=std_threshold,
-                                         min_samples=min_samples,
-                                         residual_threshold=residual_threshold,
-                                         max_trials=max_trials)
-        
-        # Impute outliers for the square and monofilament points
-        self.df_square = outlier_imputer.impute_outliers(self.df_square,
-                                                         method=method)
-        if filament:
-            self.df_monofil = outlier_imputer.impute_outliers(self.df_monofil,
-                                                              method=method)
-
-    def impute_outliers_derive_std(self,
-                        model: str = None,
-                        hybrid_model_selection: bool = True,
                         std_threshold: int|float = 2,
                         square: bool = True,
-                        filament: bool = False,):
-        outlier_imputer = OutlierImputerDeriveSTD(
-            model=model,
-            hybrid_model_selection=hybrid_model_selection
-        )
+                        filament: bool = False,) -> None:
+        Val.validate_type(std_threshold, (int, float), "STD Threshold")
+        Val.validate_positive(std_threshold, "STD Threshold", zero_allowed=True)
+        Val.validate_type(square, bool, "Square")
+        Val.validate_type(filament, bool, "Filament")
+
+        outlier_imputer = OutlierImputer()
 
         # Impute outliers for the square and monofilament points
         if square:
@@ -93,7 +69,7 @@ class DataDLC:
             self.df_monofil = outlier_imputer.impute_outliers(self.df_monofil,
                                                               std_threshold)
 
-    def get_bending_coefficients(self):
+    def get_bending_coefficients(self) -> pd.Series:
 
         # Initialize a list to store bending coefficients
         bending_coefficients = []
@@ -121,7 +97,7 @@ class DataDLC:
                                                  name='Bending_Coefficient')
         return self.df_bending_coefficients
 
-    def apply_homography(self):
+    def apply_homography(self) -> pd.DataFrame:
 
         transformed_monofil_points = []
 
@@ -157,10 +133,13 @@ class DataDLC:
 
     def _get_homography_matrix(self,
                                index: int,
-                               dst_points: np.ndarray=homography_points):
+                               dst_points: np.ndarray=homography_points) -> np.ndarray:
 
         Val.validate_type(index, int, "Index")
-        Val.validate_array_int(dst_points, shape=(4, 2), name="Destination Points")
+        Val.validate_positive(index, "Index", zero_allowed=True)
+        Val.validate_array_int_float(dst_points,
+                                     shape=(4, 2),
+                                     name="Destination Points")
 
         src_points = np.array([
             [self.df_square.iloc[index]['Top_left_x'],
@@ -177,7 +156,7 @@ class DataDLC:
         h_matrix, _ = cv2.findHomography(src_points, dst_points)
         return h_matrix
 
-    def _merge_data(self):
+    def _merge_data(self) -> pd.DataFrame:
 
         self.df_merged = pd.concat([self.df_square,
                                     self.df_monofil,

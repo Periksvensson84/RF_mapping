@@ -1,165 +1,148 @@
-import numpy as np
 import pandas as pd
-from sklearn.linear_model import RANSACRegressor
+import numpy as np
+import json
 from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
 from sklearn.neighbors import KNeighborsRegressor
+from xgboost import XGBRegressor
+from sklearn.svm import SVR
+from sklearn.linear_model import BayesianRidge
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.model_selection import GridSearchCV
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
 from validation import Validation as Val
-import warnings
-
-warnings.simplefilter(action="ignore", category=FutureWarning)
 
 class OutlierImputer:
-    # Define the pairs of points that form the square and filament
-    # for later angle calculations, easier to modify
-    square_pairs = [
-        [0, 1, 2, 3],
-        [2, 3, 6, 7],
-        [6, 7, 4, 5],
-        [4, 5, 0, 1]
-    ]
-
-    filament_pairs = [
-        [0, 1, 2, 3],
-        [2, 3, 4, 5],
-        [4, 5, 6, 7],
-        [6, 7, 8, 9],
-        [8, 9, 10, 11]
-    ]
-
     models = {
-            "RFR": RandomForestRegressor(n_estimators=100, random_state=42),
-            "HGBR": HistGradientBoostingRegressor(),
-            "KNR": KNeighborsRegressor(n_neighbors=10)
-        }
-    methods = ["square_std", "square_ransac", "filament"]
+        "RFR": RandomForestRegressor(n_estimators=100, random_state=42),
+        "HGBR": HistGradientBoostingRegressor(),
+        "KNR": KNeighborsRegressor(n_neighbors=10),
+        "XGB": XGBRegressor(n_estimators=100, learning_rate=0.1),
+        "SVR": SVR(kernel='rbf', C=100, gamma=0.1, epsilon=0.1),
+        "BR": BayesianRidge(),
+        "Poly": make_pipeline(PolynomialFeatures(degree=2), BayesianRidge())
+    }
+
+    param_grids = {
+        "RFR": {"n_estimators": [50, 100, 200],
+                "max_depth": [None, 10, 20]},
+        "HGBR": {"max_iter": [100, 200],
+                 "learning_rate": [0.05, 0.1, 0.2]},
+        "KNR": {"n_neighbors": [5, 10, 15],
+                "weights": ["uniform", "distance"]},
+        "XGB": {"n_estimators": [50, 100, 200],
+                "learning_rate": [0.05, 0.1, 0.2]},
+        "SVR": {"C": [1, 10, 100],
+                "gamma": ["scale", 0.1, 1],
+                "epsilon": [0.01, 0.1, 0.2]},
+        "BR": {"alpha_1": [1e-6, 1e-5, 1e-4],
+               "lambda_1": [1e-6, 1e-5, 1e-4]},
+        "Poly": {"bayesianridge__alpha_1": [1e-6, 1e-5],
+                 "polynomialfeatures__degree": [2]}
+    }
 
     def __init__(self,
-                 model: str = "RFR",
-                 std_threshold: int|float = 1.0,
-                 min_samples: int = 10,
-                 residual_threshold: float = 0.01,
-                 max_trials: int = 300):
-
-        self.model = model
-        self.std_threshold = std_threshold
-        self.min_samples = min_samples
-        self.residual_threshold = residual_threshold
-        self.max_trials = max_trials
+                 log_file="model_performance.json") -> None:
+        Val.validate_type(log_file, str, "Log File")
+        Val.validate_path(log_file, file_types=[".json"])
+        
+        self.best_models = {}
+        self.log_file = log_file
 
     @staticmethod
-    def compute_angles(df: pd.DataFrame,
-                       pairs: list):
+    def detect_outliers_velocity(df: pd.DataFrame,
+                                 threshold: int|float = 2.0) -> pd.DataFrame:
+        Val.validate_type(df, pd.DataFrame, "DataFrame")
+        Val.validate_type(threshold, (int, float), "Threshold")
+        Val.validate_positive(threshold, "Threshold")
+        
+        df_velocity = df.diff().abs()
+        df_velocity.iloc[0, :] = 0  # Avoid NaNs in the first row
 
-        angles = []
-        for pair in pairs:
-            x1, y1, x2, y2 = df.iloc[:, pair[0]], \
-                             df.iloc[:, pair[1]], \
-                             df.iloc[:, pair[2]], \
-                             df.iloc[:, pair[3]]
-            # Compute the angle between the two points relative to the x-axis
-            angles.append(np.arctan2(y2 - y1, x2 - x1))
-        return np.column_stack(angles)
+        mean, std = df_velocity.mean(), df_velocity.std()
+        outlier_mask = (df_velocity < (mean - threshold * std)) |\
+                       (df_velocity > (mean + threshold * std))
+        outlier_mask.iloc[0, :] = False  # First row should not be an outlier
 
-    def detect_outliers_square_std(self,
-                                   df: pd.DataFrame,
-                                   pairs: list):
-
-        # Compute the angles between the square points
-        angles = self.compute_angles(df, pairs)
-        angle_df = pd.DataFrame(angles, columns=[
-            f"angle_{i+1}" for i in range(angles.shape[1])
-            ], index=df.index)
-        # Compute the mean and standard deviation of the angles
-        angle_means, angle_stds = angle_df.mean(), angle_df.std()
-
-        # Detect outliers based on the standard deviation threshold
-        for i, pair in enumerate(pairs):
-            outlier_mask = \
-                (angle_df.iloc[:, i] - angle_means.iloc[i]).abs() > \
-                self.std_threshold * angle_stds.iloc[i]
-            df.loc[outlier_mask, [df.columns[pair[2]],
-                                  df.columns[pair[3]]]] = np.nan
-
+        outlier_mask |= (df_velocity > 50)
+        df[outlier_mask] = np.nan  # Mark outliers as NaN
         return df
 
-    def detect_outliers_ransac(self,
-                               df: pd.DataFrame,
-                               pairs: list):
-        # Compute the angles between the square points
-        angles = self.compute_angles(df, pairs)
-        angle_df = pd.DataFrame(angles,
-                                columns=[f"angle_{i+1}" for i in range(angles.shape[1])],
-                                index=df.index)
-        # Initialize the inlier mask
-        inlier_mask = np.ones(len(df), dtype=bool)
+    def _select_best_models_per_col(self,
+                                    df: pd.DataFrame) -> None:
+        Val.validate_type(df, pd.DataFrame, "DataFrame")
 
-        # Fit RANSAC regressor to each angle column
-        for col in angle_df.columns:
-            ransac = RANSACRegressor(min_samples=self.min_samples,
-                                     residual_threshold=self.residual_threshold,
-                                     max_trials=self.max_trials)
-            ransac.fit(np.arange(len(df)).reshape(-1, 1), angle_df[col])
-            # Update the inlier mask
-            inlier_mask &= ransac.inlier_mask_
+        self.best_models = {}
+        feature_cols = df.columns
 
-        # Detect outliers based on the inlier mask
-        df.loc[~inlier_mask, df.columns[:8]] = np.nan
-        return df
+        for target_col in feature_cols:
+            train_df = df.dropna(subset=[target_col])
+            train_df = train_df.dropna(how="any")
+            if train_df.empty:
+                continue
+            
+            X_train = train_df.drop(columns=[target_col])
+            y_train = train_df[target_col]
+            best_model, best_score = None, float("inf")
 
-    def impute_with_ml(self,
-                       df: pd.DataFrame,
-                       target_col: str):
-        # Split the DataFrame into training and testing sets based on
-        # the target column
-        df_copy, train_df, test_df = df.copy(), \
-                                     df.dropna(), \
-                                     df[df[target_col].isna()]
-        if test_df.empty:
-            return df_copy
+            for model_name, model in self.models.items():
+                param_grid = self.param_grids.get(model_name, {})
+                try:
+                    grid = GridSearchCV(model,
+                                        param_grid,
+                                        scoring="neg_mean_squared_error", cv=3)
+                    grid.fit(X_train, y_train)
+                    mse = -grid.best_score_
 
-        # Define the feature columns and target column
-        feature_cols = [col for col in df.columns if col != target_col]
-        # Extract the training data
-        X_train, y_train = train_df[feature_cols], train_df[target_col]
+                    if mse < best_score:
+                        best_score, best_model = mse, grid.best_estimator_
+                except:
+                    continue  # Skip model if it fails
 
-        # Select regression model
-        if self.model not in self.models:
-            raise ValueError(f"Invalid model name: {self.model}, use RFR, HGBR, or KNR")
-        ml_model = self.models[self.model]
-        # Fit the model
-        ml_model.fit(X_train, y_train)
-    
-        # Impute the missing values
-        df_copy.loc[df_copy[target_col].isna(), target_col] = \
-            ml_model.predict(test_df[feature_cols])
-        return df_copy
+            self.best_models[target_col] = best_model if best_model else None
+
+        # Default models if no good models found
+        if not any(self.best_models.values()):
+            for col in df.columns:
+                self.best_models[col] = [RandomForestRegressor(n_estimators=100),
+                                         HistGradientBoostingRegressor(),
+                                         KNeighborsRegressor(n_neighbors=10)]
+
+    def iterative_imputation(self,
+                             df: pd.DataFrame,
+                             max_iter=100) -> pd.DataFrame:
+        Val.validate_type(df, pd.DataFrame, "DataFrame")
+        Val.validate_type(max_iter, int, "Max Iterations")
+        Val.validate_positive(max_iter, "Max Iterations")
+        
+        df_copy = df.copy()
+        self._select_best_models_per_col(df_copy)
+
+        estimators = [model for model in self.best_models.values() if model]
+        estimator = estimators[0] if estimators else RandomForestRegressor()
+        
+        imputer = IterativeImputer(estimator=estimator,
+                                   max_iter=max_iter,
+                                   random_state=101)
+        imputed_array = imputer.fit_transform(df_copy)
+
+        df_imputed = pd.DataFrame(imputed_array,
+                                  columns=df.columns,
+                                  index=df.index)
+        return df_imputed
 
     def impute_outliers(self,
                         df: pd.DataFrame,
-                        method:str ="square_ransac"):
-        # Make a copy of the DataFrame and drop rows with all NaN values
-        # to avoid errors in the outlier detection
-        df_copy, valid_rows = df.copy(), df.dropna(how="all")
-        if valid_rows.empty:
-            return df_copy
+                        std_threshold: int|float = 2.0) -> pd.DataFrame:
+        Val.validate_type(df, pd.DataFrame, "DataFrame")
+        Val.validate_type(std_threshold, (int, float), "STD Threshold")
+        Val.validate_positive(std_threshold, "STD Threshold")
 
-        if method == "square_std":
-            # Detect outliers based on the standard deviation threshold
-            valid_rows = self.detect_outliers_square_std(valid_rows,
-                                                         self.square_pairs)
-        elif method == "square_ransac":
-            # Detect outliers based on RANSAC regression square points
-            valid_rows = self.detect_outliers_ransac(valid_rows,
-                                                     self.square_pairs)
-        elif method == "filament":
-            # Detect outliers based on RANSAC regression for filament points
-            valid_rows = self.detect_outliers_ransac(valid_rows,
-                                                     self.filament_pairs)
+        df_copy = self.detect_outliers_velocity(df.copy(), std_threshold)
+        df_copy = self.iterative_imputation(df_copy)
 
-        for col in df.columns:
-            # Impute missing values using machine learning
-            valid_rows = self.impute_with_ml(valid_rows, col)
+        with open(self.log_file, "w") as f:
+            json.dump({col: str(model) for col, model in self.best_models.items()}, f, indent=4)
 
-        # Update the DataFrame with the imputed values
-        df_copy.update(valid_rows.astype(np.float32))
         return df_copy

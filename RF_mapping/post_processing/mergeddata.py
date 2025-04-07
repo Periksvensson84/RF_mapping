@@ -1,24 +1,18 @@
-# this class is meant to merge the data from DataDLC and DataNeuron objects
-# with respect to the time index or peaks
-# Or if they're already the same length of time, just merge them directly
 from datadlc import DataDLC
 from dataneuron import DataNeuron
 import pandas as pd
 from validation import Validation as Val
 from scipy.signal import correlate
 
-#! implement proper synchonrizing of the data
-#! use the first 10 neuron spikes as sync points
-
 class MergedData:
     def __init__(self,
                  dlc: DataDLC,
                  neuron: DataNeuron,
-                 max_gap_fill: int = 10):
-
+                 max_gap_fill: int = 10) -> None:
         Val.validate_type(dlc, DataDLC, "DLC Object")
         Val.validate_type(neuron, DataNeuron, "Neuron Object")
         Val.validate_type(max_gap_fill, int, "Max Gap Fill")
+        Val.validate_positive(max_gap_fill, "Max Gap Fill")
 
         self.dlc = dlc
         self.neuron = neuron
@@ -29,10 +23,10 @@ class MergedData:
     def _merge(self) -> pd.DataFrame:
         # Merge the DataFrames
         df_dlc = self.dlc._merge_data()
-        df_neuron = self._fill_neuron_up()
+        df_neuron = self.neuron.downsampled_df.copy()
         
         # Create binary threshold columns
-        threshold = 0.15 * df_dlc['Bending_Coefficient'].max()
+        threshold = 0.1 * df_dlc['Bending_Coefficient'].max()
         df_dlc['Bending_Binary'] = (df_dlc['Bending_Coefficient'] > threshold).astype(int)
         
         # Fill gaps in neuron Spikes column with dynamic width
@@ -52,11 +46,24 @@ class MergedData:
         
         # Shift df_neuron index accordingly
         df_neuron = df_neuron.shift(periods=best_shift).reset_index(drop=True)
-        
         # Merge the DataFrames
         self.df_merged = pd.concat([df_dlc, df_neuron], axis=1)
+        
+        # After merging, fill the gaps created from shifting
+        # Always zero-fill for Spikes and Spikes_Filled
+        self.df_merged[['Spikes', 'Spikes_Filled']] = \
+            self.df_merged[['Spikes', 'Spikes_Filled']].fillna(0).astype(int)
+        
+        # Fill IFF column based on shift direction
+        if best_shift < 0:
+            self.df_merged["IFF"].fillna(method='ffill', inplace=True)
+            self.df_merged["IFF"].fillna(0, inplace=True)
+        else:
+            self.df_merged["IFF"].fillna(0, inplace=True)
+
         return self.df_merged
 
+    #! Might not be needed, but keeping for now
     def _fill_neuron_up(self) -> pd.DataFrame:
         # Fill the neuron data up to the length of the dlc data
         target_length = len(self.dlc.df_square)
@@ -109,16 +116,16 @@ class MergedData:
     def _save_data(self,
                    df: pd.DataFrame,
                    path: str,
-                   file_format: str):
+                   file_format: str) -> None:
         Val.validate_type(df, pd.DataFrame, "DataFrame")
         Val.validate_type(path, str, "Path")
         Val.validate_type(file_format, str, "File Format")
-        Val.validate_path(path, file_format)
+        Val.validate_path(path, [file_format])
 
         try:
             if file_format == 'csv':
                 df.to_csv(path, index=False)
-            elif file_format == 'excel':
+            elif file_format == 'xlsx':
                 df.to_excel(path, index=False)
             else:
                 raise ValueError(f"Unsupported file format: {file_format}")
@@ -128,10 +135,10 @@ class MergedData:
 
     def save_full_data(self,
                        path: str,
-                       file_format: str = 'csv'):
+                       file_format: str = 'csv') -> None:
         self._save_data(self.df_merged, path, file_format)
 
     def save_cleaned_data(self,
                           path: str,
-                          file_format: str = 'csv'):
+                          file_format: str = 'csv') -> None:
         self._save_data(self.df_merged_cleaned, path, file_format)

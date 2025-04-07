@@ -4,20 +4,33 @@ import re
 
 class Validation:
     @staticmethod
-    def validate_path(path: str, file_type: str = None):
+    def validate_path(path: str, file_types: list[str] = None):
         if not isinstance(path, str):
             raise ValueError(f"The path must be a string. Got {type(path)} instead.")
-        if file_type and not path.endswith(file_type):
-            raise ValueError(f"The file must be a {file_type} file. Got {path} instead.")
+        if len(file_types) > 0:
+            if not any(path.endswith(ext) for ext in file_types):
+                raise ValueError(f"The file must be one of {file_types}. Got '{path}' instead.")
 
     @staticmethod
-    def validate_type(value, expected_type, name: str):
-        if not isinstance(value, expected_type):
-            raise ValueError(f"{name} must be of type {expected_type}. Got {type(value)} instead.")
+    def validate_strings(**kwargs):
+        for name, value in kwargs.items():
+            Validation.validate_type(value, str, name)
 
     @staticmethod
-    def validate_positive(value, name: str):
-        if value <= 0:
+    def validate_type(value, expected_types, name: str):
+        if not isinstance(value, expected_types):
+            raise ValueError(f"{name} must be one of {expected_types}. Got {type(value)} instead.")
+
+    @staticmethod
+    def validate_type_in_list(value, expected_types, name: str):
+        if not isinstance(value, list) or not all(isinstance(v, expected_types) for v in value):
+            raise ValueError(f"{name} must be a list of {expected_types}. Got {type(value)} instead.")
+
+    @staticmethod
+    def validate_positive(value, name: str, zero_allowed: bool = False):
+        if zero_allowed and value < 0:
+            raise ValueError(f"{name} must be a non-negative number. Got {value} instead.")
+        elif not zero_allowed and value <= 0:
             raise ValueError(f"{name} must be a positive number. Got {value} instead.")
 
     @staticmethod
@@ -33,7 +46,7 @@ class Validation:
             raise ValueError(f"{name} must have shape {shape}. Got {array.shape} instead.")
 
     @staticmethod
-    def validate_array_int(array, shape: tuple = None, name: str = "Array"):
+    def validate_array_int_float(array, shape: tuple = None, name: str = "Array"):
         if not isinstance(array, np.ndarray):
             raise ValueError(f"{name} must be a numpy array. Got {type(array)} instead.")
         if shape and array.shape != shape:
@@ -57,7 +70,7 @@ class Validation:
             raise ValueError(f"{name} must be a pandas DataFrame. Got {type(df)} instead.")
         
         column_mapping = {}  # To store matched columns for renaming
-        if required_columns:
+        if len(required_columns) > 0:
             missing_columns = []
             for group in required_columns:
                 # If the group is a string, treat it as a single required column

@@ -7,9 +7,8 @@ from validation import Validation as Val
 class DataNeuron:
     def __init__(self,
                  xclc_path: str,
-                 original_freq: int):
-
-        Val.validate_path(xclc_path, file_type=".xlsx")
+                 original_freq: int) -> None:
+        Val.validate_path(xclc_path, file_types=[".xlsx"])
         Val.validate_type(original_freq, int, "Original Frequency")
         Val.validate_positive(original_freq, "Original Frequency")
 
@@ -44,7 +43,7 @@ class DataNeuron:
         if 'IFF' not in self.df.columns:
             self.calculate_iff()
 
-    def calculate_iff(self):
+    def calculate_iff(self) -> None:
 
         # Create Instantaneous Frequency Firing (IFF):
         # 1 divided by the difference between the current time and last spike time
@@ -62,13 +61,13 @@ class DataNeuron:
         # fill the remaining NaN values with 0
         self.df["IFF"].fillna(0, inplace=True)
 
-    def _get_frequency(self):
+    def _get_frequency(self) -> int:
         time_diffs = np.diff(self.df['Time'])
         # Calculate the frequency as the reciprocal of the mean time difference
         current_freq = 1 / np.mean(time_diffs).round()
         return current_freq
 
-    def fill_samples(self):
+    def fill_samples(self) -> None:
 
         interval = 1 / self.original_freq  # Compute time step based on frequency
         min_time, max_time = 0, self.df['Time'].max()
@@ -93,8 +92,7 @@ class DataNeuron:
         self.df = filled_df
 
     def downsample(self,
-                   target_freq: int):
-
+                   target_freq: int) -> pd.DataFrame:
         Val.validate_type(target_freq, int, "Target Frequency")
         Val.validate_positive(target_freq, "Target Frequency")
 
@@ -130,9 +128,9 @@ class DataNeuron:
         self.downsampled_df = downsampled_df
         return self.downsampled_df
 
+    #! Might not be needed, but keeping for now
     def _fill_downsample_length(self,
-                                target_length: int):
-
+                                target_length: int) -> pd.DataFrame:
         Val.validate_type(target_length, int, "Target Length")
         Val.validate_positive(target_length, "Target Length")
 

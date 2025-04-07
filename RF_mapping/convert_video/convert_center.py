@@ -107,5 +107,14 @@ def convert_video(input_path, crop_x=1274, crop_y=720, target_fps=30):
     print(f"Converted video saved to: {output_path}")
 
 # Example usage:
-input_video = r'C:\Python Programming\LIU\Data\Videos\2025-03-06_MNG-KEF\IMG_3740.mov'
-convert_video(input_video)
+#input_video = r'C:\Python Programming\LIU\Data\Videos\2025-03-27_training-dataset_monocolors\VID20250327135546.mp4'
+#convert_video(input_video)
+
+# convert all videos in a directory
+input_dir = r'C:\Python Programming\LIU\Data\Videos\2025-03-27_training-dataset_monocolors'
+for filename in os.listdir(input_dir):
+    if filename.endswith('.mp4'):
+        input_video = os.path.join(input_dir, filename)
+        convert_video(input_video)
+        print(f"Converted {filename} to {filename}_converted.mp4")
+print("All videos converted.")

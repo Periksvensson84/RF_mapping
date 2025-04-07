@@ -1,0 +1,47 @@
+
+Just to quickly explain how these results are laid out.
+
+1.0-1.3: The first four images just show the output from replacing outliers of
+    the neural network with machine learning. More so a visual bug-testing
+    thing to see if something is going wrong in that process.
+
+In between these plots is when the bending coefficient of the monofilament is
+also calculated. After the outlier imputing, but before the homography matrix
+change.
+
+1.4: Shows the result of applying a homography matrix to the monofil point
+    locations. After deciding the destination points of the 4 corners of the
+    square to be at:
+        [[0, 200],
+        [200, 200],
+        [200, 0],
+        [0, 0]]
+    So in the case of both these datasets; 200 pixels = 2 cm
+
+2.0-2.1: Just show the IFF and Neuron Spikes plotted together at the original
+    sampling rate and then at the target sampling rate of the video, in this
+    case 30 fps. So both have a downsample from 120000:30
+
+3.0: Just to illustrate the attempted merging of the data from deeplabcut
+    and the neuron spikes to get them on the same timeframes. Again, just to
+    see if anything looks wrong before continuing.
+
+For all the plots after this, the data is thresholded to keep the ones that
+are significant. So rows with the bending coefficient at a certain minimum are
+kept, as well as if the row has a neuron spike. All the other rows are not
+plotted.
+
+3.1-3.2: Simple RF mapping of the now merged df. With colours being binary for
+    the neuron spikes, and size relative to the bending coefficient.
+
+3.3-3.6: Plots to show 3 conditions either individually or altogether;
+    KDE density, scatter, and a background frame from the video.
+
+3.7: Then finally, there's the scroll plot over the video. This is primarily to
+    show the neuron spikes and/or IFF over the video on its specific frame. A
+    more direct visualization of the merging and if a neuron is on when there
+    is contact with the skin.
+
+The last two files are the output datasets, in both csv and excel formatting.
+In the cases of datasets 3740 and 3741, both have the thresholded data saved,
+and 3741 also has the full data saved.
